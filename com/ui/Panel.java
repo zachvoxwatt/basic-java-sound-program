@@ -13,17 +13,20 @@ import java.awt.Color;
 import java.util.Map;
 import java.util.List;
 
+import main.AudioController;
 import main.JSONDataParser;
 
 public class Panel extends JPanel
 {
 	private static final long serialVersionUID = 3350710760250147620L;
 	private JSONDataParser jdp;
+	private AudioController aud;
 	
-	public Panel(JSONDataParser j)
+	public Panel(JSONDataParser j, AudioController aud)
 	{
 		super();
 			this.jdp = j;
+			this.aud = aud;
 			setPreferredSize(new Dimension(350, 350));
 			setLayout(new FlowLayout());
 			setBackground(new Color(0, 0, 0, 255));
@@ -62,4 +65,6 @@ public class Panel extends JPanel
 			res.setPreferredSize(new Dimension(165, 150));
 			add(res);
 	}
+	
+	public AudioController getAudioController() { return this.aud; }
 }
