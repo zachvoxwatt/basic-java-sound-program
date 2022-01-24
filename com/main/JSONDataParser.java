@@ -17,7 +17,7 @@ import java.util.Objects;
 
 public class JSONDataParser 
 {
-	private boolean reports = true;
+	private boolean reports = false;
 	private Map<String, List<String>> dirmap;
 	
 	public JSONDataParser()

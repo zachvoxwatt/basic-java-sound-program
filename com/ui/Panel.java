@@ -36,21 +36,19 @@ public class Panel extends JPanel
 			
 			for (Map.Entry<String, List<String>> map: jdp.getDirectoryMap().entrySet()) 
 				jcb.addItem(map.getKey());
-			
-			jcb.addActionListener(new ActionListener()
-				{
-					public void actionPerformed(ActionEvent e)
-					{
-						System.out.printf("Item '%s' is selected at index %d\n",jcb.getSelectedItem(), jcb.getSelectedIndex());
-					}
-				}
-			);
-			
-			jcb.setSelectedIndex(1);
+				jcb.setSelectedIndex(1);
 			add(jcb);
 			
 		JButton play = new JButton("Play");
 			play.setPreferredSize(new Dimension(165, 150));
+			play.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						aud.play(jcb.getSelectedItem().toString());
+					}
+				}
+			);
 			add(play);
 			
 		JButton stop = new JButton("Stop");
