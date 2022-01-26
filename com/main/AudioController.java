@@ -5,6 +5,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -12,10 +13,12 @@ public class AudioController
 {
 	private ScheduledExecutorService schedulerCore;
 	private Map<String, List<String>> audioMap;
+	private List<SoundFile> activeQueue;
 	
 	public AudioController(Map<String, List<String>> dirmap)
 	{
 		this.audioMap = dirmap;
+		this.activeQueue = new LinkedList<>();
 		setScheduler(Executors.newScheduledThreadPool(3, new ThreadNamers()));
 	}
 	
@@ -35,22 +38,29 @@ public class AudioController
 		
 		SoundFile f = new SoundFile(u, type, this);
 			f.assignSchedule(this.schedulerCore.schedule(f.getPlayerJob(), 10, TimeUnit.MICROSECONDS));
+			this.activeQueue.add(f);
 		return f;
 	}
 	
-	public void stop()
-	{
+	public void stop(SoundFile sf)
+	{ 
+		sf.getSchedule().cancel(true);
+		sf.stop();
+		this.activeQueue.remove(sf);
 		
+		sf = null;
+		System.gc();
 	}
 
-	public void pause()
+	public void pause(SoundFile sf)
 	{
-		
+	//	sf.getSchedule().cancel(true);
+		sf.pause();
 	}
 	
-	public void resume()
+	public void resume(SoundFile sf)
 	{
-		
+		sf.assignSchedule(this.schedulerCore.schedule(sf.getPlayerJob(), 10, TimeUnit.MICROSECONDS));
 	}
 	
 	void dumb() {}
