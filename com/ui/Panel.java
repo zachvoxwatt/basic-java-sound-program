@@ -70,7 +70,6 @@ public class Panel extends JPanel
 					public void actionPerformed(ActionEvent e)
 					{
 						if (jcb.getSelectedIndex() == 0) return;
-				//		if (!activeSound.equals(null)) aud.stop(activeSound);
 						activeSound = audctrl.play(jcb.getSelectedItem().toString());
 						
 						play.setEnabled(false);
@@ -91,6 +90,7 @@ public class Panel extends JPanel
 					{
 						if (jcb.getSelectedIndex() == 0) return;
 						audctrl.stop(activeSound);
+						activeSound.closeAssets();
 						
 						play.setEnabled(true);
 						resr.setEnabled(false);
@@ -142,5 +142,12 @@ public class Panel extends JPanel
 			add(resr);
 	}
 	
+	public void resetButtons()
+	{
+		play.setEnabled(true);
+		stop.setEnabled(false);
+		paus.setEnabled(false);
+		resr.setEnabled(false);
+	}
 	public AudioController getAudioController() { return this.audctrl; }
 }

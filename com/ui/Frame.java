@@ -22,7 +22,11 @@ public class Frame extends JFrame
 		
 		jdp = new JSONDataParser();
 		aud = new AudioController(jdp.getDirectoryMap());
-			add(new Panel(jdp, aud));
+			
+		Panel p = new Panel(jdp, aud);
+		
+			add(p);
+			aud.assignPanel(p);
 			
 			pack();
 			setLocationRelativeTo(null);

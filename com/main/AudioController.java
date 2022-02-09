@@ -4,46 +4,88 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
+
+import ui.Panel;
+
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
 public class AudioController 
 {
+	private Panel pane;
 	private ScheduledExecutorService schedulerCore;
-	private Map<String, List<String>> audioMap;
+	private Map<String, List<String>> audioKeyURLMap;
+	private Map<String, List<SoundFile>> sfxMap;
 	private List<SoundFile> activeQueue;
 	
 	public AudioController(Map<String, List<String>> dirmap)
 	{
-		this.audioMap = dirmap;
+		this.audioKeyURLMap = dirmap;
+		this.sfxMap = new HashMap<>();
 		this.activeQueue = new LinkedList<>();
+		
+		//initialize the all of the sounds
+		for (Map.Entry<String, List<String>> itor: this.audioKeyURLMap.entrySet())
+		{
+			String key = itor.getKey();
+			List<SoundFile> sfxs = new ArrayList<>();
+			
+			if (itor.getValue().size() <= 2)
+			{
+				String type = itor.getValue().get(0);
+				String u = itor.getValue().get(1);
+				URL url = this.getClass().getResource(u);
+				
+				SoundFile f = new SoundFile(url, type, this, false);
+				sfxs.add(f);
+			}
+			
+			else
+			{
+				String type = itor.getValue().get(0);
+				Iterator<String> itr = itor.getValue().iterator();
+				int i = 0;
+				
+				while (itr.hasNext())
+				{
+					if (i == 0)
+					{
+						itr.next();
+						i++;
+						continue;
+					}
+					
+					String u = itr.next();
+					URL url = this.getClass().getResource(u);
+					
+					SoundFile f = new SoundFile(url, type, this, false);
+					sfxs.add(f);
+					i++;
+				}
+			}
+			
+			this.sfxMap.put(key, sfxs);
+		}
+		
 		setScheduler(Executors.newScheduledThreadPool(3, new ThreadNamers()));
 	}
 	
-	public void testKey(String key)
-	{
-		String replyString = "Key '" + key + "' has ";
-		
-		replyString += (this.audioMap.get((String) key).size() <= 2) ? "only 1 variant" : this.audioMap.get((String) key).size() - 1 + " variants";
-		System.out.println(replyString);
-	}
-	
 	public SoundFile play(String key)
-	{
-		String type = this.audioMap.get(key).get(0);
-		String url = this.audioMap.get(key).get(1);
-		URL u = this.getClass().getResource(url);
-		
-		SoundFile f = new SoundFile(u, type, this);
-			f.assignSchedule(this.schedulerCore.schedule(f.getPlayerJob(), 10, TimeUnit.MICROSECONDS));
+	{	
+		SoundFile f = this.sfxMap.get(key).get(0).clone();
+			f.play();
+			f.assignSchedule(this.schedulerCore.scheduleWithFixedDelay(f.getTimerJob(), 0, 10, TimeUnit.MILLISECONDS));
 			this.activeQueue.add(f);
 		return f;
 	}
 	
 	public void stop(SoundFile sf)
-	{ 
+	{
 		sf.getSchedule().cancel(true);
 		sf.stop();
 		this.activeQueue.remove(sf);
@@ -51,22 +93,25 @@ public class AudioController
 		sf = null;
 		System.gc();
 	}
-
-	public void pause(SoundFile sf)
-	{
-	//	sf.getSchedule().cancel(true);
-		sf.pause();
-	}
 	
-	public void resume(SoundFile sf)
+	public void purgeSound(SoundFile sf)
 	{
-		sf.assignSchedule(this.schedulerCore.schedule(sf.getResumeJob(), 10, TimeUnit.MICROSECONDS));
+		this.activeQueue.remove(sf);
+		sf = null;
+		System.gc();
 	}
+
+	public void pause(SoundFile sf) { sf.pause(); }
+	
+	public void resume(SoundFile sf) { sf.resume(); }
 	
 	void dumb() {}
 
+	public void assignPanel(Panel p) { this.pane = p; }
+	
+	public Panel getPanel() { return this.pane; }
 	public ScheduledExecutorService getScheduler() { return schedulerCore; }
-	public Map<String, List<String>> getAudioMap() { return this.audioMap; }
+	public Map<String, List<String>> getAudioMap() { return this.audioKeyURLMap; }
 	public void setScheduler(ScheduledExecutorService cores) { this.schedulerCore = cores; };
 }
 

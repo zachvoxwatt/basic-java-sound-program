@@ -19,10 +19,10 @@ public class SoundFile implements LineListener
 	private Clip clip;
 	private AudioInputStream ais;
 	private AudioController aud;
-	private Runnable player, resumer;
+	private Runnable timer;
 	private ScheduledFuture<?> scheF;
 	
-	public SoundFile(URL u, String type, AudioController ad)
+	public SoundFile(URL u, String type, AudioController ad, boolean preOpenLine)
 	{
 		this.url = u;
 		this.audioType = type;
@@ -32,44 +32,49 @@ public class SoundFile implements LineListener
 		{
 			this.clip = AudioSystem.getClip();
 			ais = AudioSystem.getAudioInputStream(this.url);
-			clip.open(ais);
 		}
 	
 		catch (Exception e) { e.printStackTrace(); }
 		
-		player = new Runnable()
-		{
-			public void run()
+		timer = new Runnable()
 			{
-				if (!playing) 
+				public void run()
 				{
-					clip.start();
-					playing = true;
-					return;
+					for (int i = 0; i < 15; i++) System.out.println();
+					System.out.println("Clip length: " + clip.getFrameLength());
+					System.out.println("Clip curpos: " + clip.getFramePosition());
 				}
-				
-				else
-				{
-					clip.setFramePosition(0);
-					clip.start();
-				}
-			}
-		};
-		
-		resumer = new Runnable()
-		{
-			public void run()
-			{
-				if (playing && paused)
-				{
-					clip.setFramePosition(pauseMark);
-					clip.start();
-					paused = false;
-				}
-			}
 		};
 		
 		this.clip.addLineListener(this);
+		
+		if (preOpenLine) try { clip.open(ais); } catch (Exception e) { e.printStackTrace(); }
+	}
+	
+	public void play()
+	{
+		if (!playing) 
+		{
+			clip.start();
+			playing = true;
+			return;
+		}
+		
+		else
+		{
+			clip.setFramePosition(0);
+			clip.start();
+		}
+	}
+	
+	public void resume()
+	{
+		if (playing && paused)
+		{
+			clip.setFramePosition(pauseMark);
+			clip.start();
+			paused = false;
+		}
 	}
 	
 	public void pause() 
@@ -113,6 +118,8 @@ public class SoundFile implements LineListener
 		{
 			closeAssets();
 			this.scheF.cancel(true);
+			aud.purgeSound(this);
+			aud.getPanel().resetButtons();
 		}
 	}
 	
@@ -125,7 +132,7 @@ public class SoundFile implements LineListener
 	public AudioController getAudioController() { return this.aud; }
 	public ScheduledFuture<?> getSchedule() { return this.scheF; }
 	public String getAudioType() { return this.audioType; }
-	public Runnable getPlayerJob() { return this.player; }
-	public Runnable getResumeJob() { return this.resumer; }
+	public Runnable getTimerJob() { return this.timer; }
 	public URL getSoundURL() { return url; }
+	public SoundFile clone() { return new SoundFile(this.url, this.audioType, this.aud, true); } 
 }
