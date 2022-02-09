@@ -19,7 +19,7 @@ public class SoundFile implements LineListener
 	private Clip clip;
 	private AudioInputStream ais;
 	private AudioController aud;
-	private Runnable player;
+	private Runnable player, resumer;
 	private ScheduledFuture<?> scheF;
 	
 	public SoundFile(URL u, String type, AudioController ad)
@@ -48,14 +48,6 @@ public class SoundFile implements LineListener
 					return;
 				}
 				
-				else if (playing && paused)
-				{
-					paused = false;
-					reopenLine();
-					clip.setFramePosition(pauseMark);
-					clip.start();
-				}
-				
 				else
 				{
 					clip.setFramePosition(0);
@@ -64,15 +56,27 @@ public class SoundFile implements LineListener
 			}
 		};
 		
+		resumer = new Runnable()
+		{
+			public void run()
+			{
+				if (playing && paused)
+				{
+					clip.setFramePosition(pauseMark);
+					clip.start();
+					paused = false;
+				}
+			}
+		};
+		
 		this.clip.addLineListener(this);
 	}
 	
 	public void pause() 
-	{ 
+	{
 		this.paused = true;
 		this.clip.stop();
 		this.pauseMark = this.clip.getFramePosition();
-		System.out.println(pauseMark);
 	}
 	
 	public void stop() { this.clip.stop(); this.playing = false; }
@@ -103,6 +107,8 @@ public class SoundFile implements LineListener
 	{
 		LineEvent.Type le = event.getType();
 		
+		if (paused) return;
+		
 		if (le.equals(LineEvent.Type.STOP))
 		{
 			closeAssets();
@@ -120,5 +126,6 @@ public class SoundFile implements LineListener
 	public ScheduledFuture<?> getSchedule() { return this.scheF; }
 	public String getAudioType() { return this.audioType; }
 	public Runnable getPlayerJob() { return this.player; }
+	public Runnable getResumeJob() { return this.resumer; }
 	public URL getSoundURL() { return url; }
 }

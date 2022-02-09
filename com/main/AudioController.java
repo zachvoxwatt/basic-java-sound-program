@@ -60,7 +60,7 @@ public class AudioController
 	
 	public void resume(SoundFile sf)
 	{
-		sf.assignSchedule(this.schedulerCore.schedule(sf.getPlayerJob(), 10, TimeUnit.MICROSECONDS));
+		sf.assignSchedule(this.schedulerCore.schedule(sf.getResumeJob(), 10, TimeUnit.MICROSECONDS));
 	}
 	
 	void dumb() {}

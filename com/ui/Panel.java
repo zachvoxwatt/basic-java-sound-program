@@ -24,7 +24,7 @@ public class Panel extends JPanel
 	private JSONDataParser jdp;
 	private AudioController audctrl;
 	private SoundFile activeSound;
-	private JButton play, paus, stop, res;
+	private JButton play, paus, stop, resr;
 	
 	public Panel(JSONDataParser j, AudioController aud)
 	{
@@ -45,9 +45,15 @@ public class Panel extends JPanel
 				{
 					public void actionPerformed(ActionEvent e)
 					{
-						if (Objects.isNull(activeSound)) return;
+						if (Objects.isNull(activeSound) || jcb.getSelectedIndex() == 0) return;
 						else if (activeSound.isPlaying())
+						{
 							audctrl.stop(activeSound);
+							play.setEnabled(true);
+							stop.setEnabled(false);
+							paus.setEnabled(false);
+							resr.setEnabled(false);
+						}
 					}
 				}
 			);
@@ -70,6 +76,7 @@ public class Panel extends JPanel
 						play.setEnabled(false);
 						stop.setEnabled(true);
 						paus.setEnabled(true);
+						resr.setEnabled(false);
 					}
 				}
 			);
@@ -86,7 +93,7 @@ public class Panel extends JPanel
 						audctrl.stop(activeSound);
 						
 						play.setEnabled(true);
-						res.setEnabled(false);
+						resr.setEnabled(false);
 						paus.setEnabled(false);
 						stop.setEnabled(false);
 					}
@@ -108,16 +115,16 @@ public class Panel extends JPanel
 						paus.setEnabled(false);
 						play.setEnabled(true);
 						stop.setEnabled(true);
-						res.setEnabled(true);
+						resr.setEnabled(true);
 					}
 				}
 			);
 			add(paus);
 			
-		res = new JButton("Resume");
-			res.setPreferredSize(new Dimension(165, 150));
-			res.setEnabled(false);
-			res.addActionListener(new ActionListener()
+		resr = new JButton("Resume");
+			resr.setPreferredSize(new Dimension(165, 150));
+			resr.setEnabled(false);
+			resr.addActionListener(new ActionListener()
 				{
 					public void actionPerformed(ActionEvent e)
 					{
@@ -125,14 +132,14 @@ public class Panel extends JPanel
 						
 						audctrl.resume(activeSound);
 						
-						res.setEnabled(false);
+						resr.setEnabled(false);
 						play.setEnabled(false);
 						stop.setEnabled(true);
 						paus.setEnabled(true);
 					}
 				}
 			);
-			add(res);
+			add(resr);
 	}
 	
 	public AudioController getAudioController() { return this.audctrl; }
