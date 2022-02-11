@@ -21,10 +21,12 @@ import main.SoundFile;
 public class Panel extends JPanel
 {
 	private static final long serialVersionUID = 3350710760250147620L;
+	private boolean onLoop = false, isMute = false;
+	
 	private JSONDataParser jdp;
 	private AudioController audctrl;
 	private SoundFile activeSound;
-	private JButton play, paus, stop, resr;
+	private JButton play, paus, stop, resr, mute, loop;
 	
 	public Panel(JSONDataParser j, AudioController aud)
 	{
@@ -32,7 +34,7 @@ public class Panel extends JPanel
 			this.activeSound = null;
 			this.jdp = j;
 			this.audctrl = aud;
-			setPreferredSize(new Dimension(350, 350));
+			setPreferredSize(new Dimension(350, 245));
 			setLayout(new FlowLayout());
 			setBackground(new Color(0, 0, 0, 255));
 			
@@ -62,14 +64,67 @@ public class Panel extends JPanel
 				jcb.addItem(map.getKey());
 				
 			add(jcb);
-			
-		play = new JButton("Play");
-			play.setPreferredSize(new Dimension(165, 150));
-			play.addActionListener(new ActionListener()
+		
+		mute = new JButton("Mute");
+			mute.setPreferredSize(new Dimension(200, 20));
+			mute.addActionListener(new ActionListener()
 				{
 					public void actionPerformed(ActionEvent e)
 					{
 						if (jcb.getSelectedIndex() == 0) return;
+						
+						if (isMute)
+						{
+							isMute = false;
+							mute.setText("Mute");
+						}
+						else
+						{
+							isMute = true;
+							mute.setText("Unmute");
+						}
+						
+						audctrl.toggleMute(activeSound);
+					}
+				}
+			);
+			add(mute);
+			
+		loop = new JButton("Repeat OFF");
+			loop.setPreferredSize(new Dimension(200, 20));
+			loop.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						if (jcb.getSelectedIndex() == 0) return;
+					
+						if (onLoop)
+						{
+							onLoop = false;
+							loop.setText("Repeat OFF");
+						}
+						else
+						{
+							onLoop = true;
+							loop.setText("Repeat ON");
+						}
+						
+						audctrl.toggleLoop(activeSound);
+					}
+				}
+			);
+			add(loop);
+			
+		play = new JButton("Play");
+			play.setPreferredSize(new Dimension(165, 75));
+			play.addActionListener(new ActionListener()
+				{
+					public void actionPerformed(ActionEvent e)
+					{
+						
+						if (jcb.getSelectedIndex() == 0) return;
+						
+						if (!Objects.isNull(activeSound)) audctrl.stop(activeSound);
 						activeSound = audctrl.play(jcb.getSelectedItem().toString());
 						
 						play.setEnabled(false);
@@ -82,13 +137,14 @@ public class Panel extends JPanel
 			add(play);
 			
 		stop = new JButton("Stop");
-			stop.setPreferredSize(new Dimension(165, 150));
+			stop.setPreferredSize(new Dimension(165, 75));
 			stop.setEnabled(false);
 			stop.addActionListener(new ActionListener()
 				{
 					public void actionPerformed(ActionEvent e)
 					{
 						if (jcb.getSelectedIndex() == 0) return;
+						
 						audctrl.stop(activeSound);
 						activeSound.closeAssets();
 						
@@ -102,7 +158,7 @@ public class Panel extends JPanel
 			add(stop);
 			
 		paus = new JButton("Pause");
-			paus.setPreferredSize(new Dimension(165, 150));
+			paus.setPreferredSize(new Dimension(165, 75));
 			paus.setEnabled(false);
 			paus.addActionListener(new ActionListener()
 				{
@@ -122,7 +178,7 @@ public class Panel extends JPanel
 			add(paus);
 			
 		resr = new JButton("Resume");
-			resr.setPreferredSize(new Dimension(165, 150));
+			resr.setPreferredSize(new Dimension(165, 75));
 			resr.setEnabled(false);
 			resr.addActionListener(new ActionListener()
 				{
@@ -149,5 +205,8 @@ public class Panel extends JPanel
 		paus.setEnabled(false);
 		resr.setEnabled(false);
 	}
+	
+	public boolean muteSelected() { return this.isMute; }
+	public boolean loopSelected() { return this.onLoop; }
 	public AudioController getAudioController() { return this.audctrl; }
 }

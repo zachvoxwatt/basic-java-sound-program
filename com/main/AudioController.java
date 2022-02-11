@@ -14,9 +14,11 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class AudioController 
 {
+	private Random rand;
 	private Panel pane;
 	private ScheduledExecutorService schedulerCore;
 	private Map<String, List<String>> audioKeyURLMap;
@@ -25,6 +27,7 @@ public class AudioController
 	
 	public AudioController(Map<String, List<String>> dirmap)
 	{
+		this.rand = new Random();
 		this.audioKeyURLMap = dirmap;
 		this.sfxMap = new HashMap<>();
 		this.activeQueue = new LinkedList<>();
@@ -76,10 +79,11 @@ public class AudioController
 	}
 	
 	public SoundFile play(String key)
-	{	
-		SoundFile f = this.sfxMap.get(key).get(0).clone();
+	{
+		int sizeof = this.sfxMap.get(key).size();
+		SoundFile f = this.sfxMap.get(key).get(rand.nextInt(sizeof)).clone();
 			f.play();
-			f.assignSchedule(this.schedulerCore.scheduleWithFixedDelay(f.getTimerJob(), 0, 10, TimeUnit.MILLISECONDS));
+			f.assignSchedule(this.schedulerCore.scheduleWithFixedDelay(f.getTimerJob(), 0, 1, TimeUnit.SECONDS));
 			this.activeQueue.add(f);
 		return f;
 	}
@@ -100,9 +104,10 @@ public class AudioController
 		sf = null;
 		System.gc();
 	}
-
-	public void pause(SoundFile sf) { sf.pause(); }
 	
+	public void toggleMute(SoundFile sf) { sf.toggleMute(); }
+	public void toggleLoop(SoundFile sf) { sf.toggleLoop(); }
+	public void pause(SoundFile sf) { sf.pause(); }
 	public void resume(SoundFile sf) { sf.resume(); }
 	
 	void dumb() {}

@@ -13,5 +13,22 @@
 		"id": "80s",
 		"type": "music",
 		"various": false
+	},
+	{
+		"id": "backintime",
+		"type": "music",
+		"various": false
+	},
+	{
+		"id": "nostal",
+		"type": "music",
+		"various": true,
+		"variants": ["nostal1", "nostal2"]
+	},
+	{
+		"id": "sunpick",
+		"type": "sound",
+		"various": true,
+		"variants": ["sun_pick1", "sun_pick2", "sun_pick3", "sun_pick4", "sun_pick5", "sun_pick6", "sun_pick7", "sun_pick8"]
 	}
 ]
