@@ -7,13 +7,11 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.sound.sampled.FloatControl;
-import javax.sound.sampled.LineEvent;
-import javax.sound.sampled.LineListener;
 
-public class SoundFile implements LineListener
+public class SoundFile
 {
 	private int pauseMark = 0, lastMark = 0;
-	private boolean playing = false, paused = false, looping = false, muted = false;
+	private boolean playing = false, paused = false, looping = false, muted = false, muteAction = false;
 	private boolean debugFrames = false;
 	
 	private URL url;
@@ -23,6 +21,8 @@ public class SoundFile implements LineListener
 	private AudioController aud;
 	private Runnable timer;
 	private FloatControl volume;
+	private AudioLoopListener loopListener;
+	private AudioNormalListener casualListener;
 	private ScheduledFuture<?> scheF;
 	
 	public SoundFile(URL u, String type, AudioController ad, boolean preOpenLine)
@@ -54,13 +54,16 @@ public class SoundFile implements LineListener
 					}
 				}
 		};
-	
-		this.clip.addLineListener(this);
 		
 		if (preOpenLine)
 		{
 			try { clip.open(ais); } catch (Exception e) { e.printStackTrace(); }
 			volume = (FloatControl) this.clip.getControl(FloatControl.Type.MASTER_GAIN);
+			
+			loopListener = new AudioLoopListener(this);
+			casualListener = new AudioNormalListener(this);
+			
+			this.clip.addLineListener(casualListener);
 		}
 	}
 	
@@ -78,6 +81,12 @@ public class SoundFile implements LineListener
 			clip.setFramePosition(0);
 			clip.start();
 		}
+	}
+	
+	public void replay()
+	{
+		clip.start();
+		playing = true;
 	}
 	
 	public void resume()
@@ -102,13 +111,15 @@ public class SoundFile implements LineListener
 		if (looping)
 		{
 			this.clip.loop(0);
-			System.out.println("Loop deactivated!");
+			this.clip.removeLineListener(loopListener);
+			this.clip.addLineListener(casualListener);
 			this.looping = false;
 		}
 		else
 		{
 			this.clip.loop(Clip.LOOP_CONTINUOUSLY);
-			System.out.println("Loop activated!");
+			this.clip.removeLineListener(casualListener);
+			this.clip.addLineListener(loopListener);
 			this.looping = true;
 		}
 	}
@@ -117,18 +128,24 @@ public class SoundFile implements LineListener
 	{
 		if (muted)
 		{
+			muted = false;
+			muteAction = true;
 			pause();
+			muteAction = false;
 			volume.setValue(0f);
 			resume();
-			muted = false;
+			return;
 		}
 		
 		else
 		{
+			muted = true;
+			muteAction = true;
 			pause();
+			muteAction = false;
 			volume.setValue(-80f);
 			resume();
-			muted = true;
+			return;
 		}
 			
 	}
@@ -154,8 +171,7 @@ public class SoundFile implements LineListener
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
-	
-
+	/*
 	@Override
 	public void update(LineEvent event) 
 	{
@@ -181,13 +197,16 @@ public class SoundFile implements LineListener
 			return;
 		}
 	}
-	
+	*/
 	public void assignSchedule(ScheduledFuture<?> sf) { this.scheF = sf; }
+	public void shouldDebugFrames(boolean b) { this.debugFrames = b; }
 	
 	public long getPauseMark() { return this.pauseMark; }
 	public boolean isPaused() { return this.paused; }
 	public boolean isPlaying() { return this.playing; }
 	public boolean isLooping() { return this.looping; }
+	public boolean muteOnAct() { return this.muteAction; }
+	public boolean debuggingFramesEnabled() { return this.debugFrames; }
 	
 	public AudioController getAudioController() { return this.aud; }
 	public ScheduledFuture<?> getSchedule() { return this.scheF; }
