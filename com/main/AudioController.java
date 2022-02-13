@@ -78,14 +78,21 @@ public class AudioController
 		setScheduler(Executors.newScheduledThreadPool(3, new ThreadNamers()));
 	}
 	
-	public SoundFile play(String key)
+	public SoundFile play(String key, boolean loopAtStart)
 	{
 		int sizeof = this.sfxMap.get(key).size();
 		SoundFile f = this.sfxMap.get(key).get(rand.nextInt(sizeof)).clone();
 			f.play();
 			f.assignSchedule(this.schedulerCore.scheduleWithFixedDelay(f.getTimerJob(), 0, 1, TimeUnit.SECONDS));
 			this.activeQueue.add(f);
+			
+			if (loopAtStart) f.toggleLoop();
 		return f;
+	}
+	
+	public SoundFile play(String key)
+	{
+		return play(key, false);
 	}
 	
 	public void stop(SoundFile sf)
