@@ -26,7 +26,7 @@ public class Panel extends JPanel
 	private JSONDataParser jdp;
 	private AudioController audctrl;
 	private SoundFile activeSound;
-	private JButton play, paus, stop, resr, mute, loop;
+	private JButton play, paus, stop, resr, loop;
 	
 	public Panel(JSONDataParser j, AudioController aud)
 	{
@@ -65,31 +65,6 @@ public class Panel extends JPanel
 				
 			add(jcb);
 		
-		mute = new JButton("Mute");
-			mute.setPreferredSize(new Dimension(200, 20));
-			mute.addActionListener(new ActionListener()
-				{
-					public void actionPerformed(ActionEvent e)
-					{
-						if (jcb.getSelectedIndex() == 0) return;
-						
-						if (isMute)
-						{
-							isMute = false;
-							mute.setText("Mute");
-						}
-						else
-						{
-							isMute = true;
-							mute.setText("Unmute");
-						}
-						
-						audctrl.toggleMute(activeSound);
-					}
-				}
-			);
-			add(mute);
-			
 		loop = new JButton("Repeat OFF");
 			loop.setPreferredSize(new Dimension(200, 20));
 			loop.addActionListener(new ActionListener()

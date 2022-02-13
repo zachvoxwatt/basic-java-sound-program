@@ -12,7 +12,7 @@ public class SoundFile
 {
 	private int pauseMark = 0, lastMark = 0;
 	private boolean playing = false, paused = false, looping = false, muted = false, muteAction = false;
-	private boolean debugFrames = false;
+	private boolean DEBUG_FRAMES = false, DEBUG_CLIPS = false;
 	
 	private URL url;
 	private String audioType = "";
@@ -21,8 +21,6 @@ public class SoundFile
 	private AudioController aud;
 	private Runnable timer;
 	private FloatControl volume;
-	private AudioLoopListener loopListener;
-	private AudioNormalListener casualListener;
 	private ScheduledFuture<?> scheF;
 	
 	public SoundFile(URL u, String type, AudioController ad, boolean preOpenLine)
@@ -43,7 +41,7 @@ public class SoundFile
 			{
 				public void run()
 				{
-					if (true)
+					if (DEBUG_FRAMES)
 					{	
 						int currMark = clip.getFramePosition();
 						for (int i = 0; i < 2; i++) System.out.println();
@@ -59,11 +57,7 @@ public class SoundFile
 		{
 			try { clip.open(ais); } catch (Exception e) { e.printStackTrace(); }
 			volume = (FloatControl) this.clip.getControl(FloatControl.Type.MASTER_GAIN);
-			
-			loopListener = new AudioLoopListener(this);
-			casualListener = new AudioNormalListener(this);
-			
-			this.clip.addLineListener(casualListener);
+			this.clip.addLineListener(new AudioListener(this, this.DEBUG_CLIPS));
 		}
 	}
 	
@@ -111,19 +105,16 @@ public class SoundFile
 		if (looping)
 		{
 			this.clip.loop(0);
-			this.clip.removeLineListener(loopListener);
-			this.clip.addLineListener(casualListener);
 			this.looping = false;
 		}
 		else
 		{
 			this.clip.loop(Clip.LOOP_CONTINUOUSLY);
-			this.clip.removeLineListener(casualListener);
-			this.clip.addLineListener(loopListener);
 			this.looping = true;
 		}
 	}
 	
+	//unused, cancelled feature
 	public void toggleMute()
 	{
 		if (muted)
@@ -171,42 +162,16 @@ public class SoundFile
 		}
 		catch (Exception e) { e.printStackTrace(); }
 	}
-	/*
-	@Override
-	public void update(LineEvent event) 
-	{
-		LineEvent.Type le = event.getType();
-		System.out.println();
-		System.out.println(le.toString());
-		System.out.println();
-		if (paused || looping) return;
-		
-		if (le.equals(LineEvent.Type.STOP) && !looping)
-		{
-			closeAssets();
-			this.scheF.cancel(true);
-			aud.purgeSound(this);
-			aud.getPanel().resetButtons();
-		}
-		
-		if (le.equals(LineEvent.Type.CLOSE) && looping)
-		{
-			System.out.println("I got here!");
-			reopenLine();
-			play();
-			return;
-		}
-	}
-	*/
+	
 	public void assignSchedule(ScheduledFuture<?> sf) { this.scheF = sf; }
-	public void shouldDebugFrames(boolean b) { this.debugFrames = b; }
+	public void shouldDebugFrames(boolean b) { this.DEBUG_FRAMES = b; }
 	
 	public long getPauseMark() { return this.pauseMark; }
 	public boolean isPaused() { return this.paused; }
 	public boolean isPlaying() { return this.playing; }
 	public boolean isLooping() { return this.looping; }
 	public boolean muteOnAct() { return this.muteAction; }
-	public boolean debuggingFramesEnabled() { return this.debugFrames; }
+	public boolean debuggingFramesEnabled() { return this.DEBUG_FRAMES; }
 	
 	public AudioController getAudioController() { return this.aud; }
 	public ScheduledFuture<?> getSchedule() { return this.scheF; }
