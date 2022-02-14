@@ -19,19 +19,15 @@ public class AudioListener implements LineListener
 	{
 		LineEvent.Type let = event.getType();
 		
-		if (debugON)
-		{
-			System.out.printf("LineEvent Type: %s\n", let.toString());
-		}
-		
-		if (this.sound.isPaused()) return;
+		if (debugON) System.out.printf("LineEvent Type: %s\n", let.toString());
+		if (this.sound.isPaused() || this.sound.isLooping()) return;
 		
 		if (let.equals(LineEvent.Type.STOP))
 		{
 			this.sound.closeAssets();
 			this.sound.getSchedule().cancel(true);
 			this.sound.getAudioController().getPanel().resetButtons();
-			this.sound.getAudioController().purgeSound(this.sound);
+			this.sound.markAsUnused();
 		}
 	}
 }

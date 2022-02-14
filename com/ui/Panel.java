@@ -51,10 +51,7 @@ public class Panel extends JPanel
 						else if (activeSound.isPlaying())
 						{
 							audctrl.stop(activeSound);
-							play.setEnabled(true);
-							stop.setEnabled(false);
-							paus.setEnabled(false);
-							resr.setEnabled(false);
+							resetButtons();
 						}
 					}
 				}
@@ -66,6 +63,7 @@ public class Panel extends JPanel
 			add(jcb);
 		
 		loop = new JButton("Repeat OFF");
+			loop.setEnabled(false);
 			loop.setPreferredSize(new Dimension(200, 20));
 			loop.addActionListener(new ActionListener()
 				{
@@ -106,6 +104,7 @@ public class Panel extends JPanel
 						stop.setEnabled(true);
 						paus.setEnabled(true);
 						resr.setEnabled(false);
+						loop.setEnabled(true);
 					}
 				}
 			);
@@ -123,10 +122,7 @@ public class Panel extends JPanel
 						audctrl.stop(activeSound);
 						activeSound.closeAssets();
 						
-						play.setEnabled(true);
-						resr.setEnabled(false);
-						paus.setEnabled(false);
-						stop.setEnabled(false);
+						resetButtons();
 					}
 				}
 			);
@@ -179,6 +175,10 @@ public class Panel extends JPanel
 		stop.setEnabled(false);
 		paus.setEnabled(false);
 		resr.setEnabled(false);
+		loop.setEnabled(false);
+		
+		this.onLoop = false;
+		loop.setText("Repeat OFF");
 	}
 	
 	public boolean muteSelected() { return this.isMute; }

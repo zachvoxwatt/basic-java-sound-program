@@ -11,14 +11,15 @@ import javax.sound.sampled.FloatControl;
 public class SoundFile
 {
 	private int pauseMark = 0, lastMark = 0;
-	private boolean playing = false, paused = false, looping = false, muted = false, muteAction = false;
-	private boolean DEBUG_FRAMES = false, DEBUG_CLIPS = false;
+	private boolean playing = false, paused = false, looping = false, muted = false, muteAction = false, unused = false;
+	private boolean DEBUG_FRAMES = false, DEBUG_CLIPS = true;
 	
 	private URL url;
 	private String audioType = "";
 	private Clip clip;
 	private AudioInputStream ais;
 	private AudioController aud;
+	private AudioListener alr;
 	private Runnable timer;
 	private FloatControl volume;
 	private ScheduledFuture<?> scheF;
@@ -57,7 +58,9 @@ public class SoundFile
 		{
 			try { clip.open(ais); } catch (Exception e) { e.printStackTrace(); }
 			volume = (FloatControl) this.clip.getControl(FloatControl.Type.MASTER_GAIN);
-			this.clip.addLineListener(new AudioListener(this, this.DEBUG_CLIPS));
+			
+			alr = new AudioListener(this, this.DEBUG_CLIPS);
+			this.clip.addLineListener(alr);
 		}
 	}
 	
@@ -95,9 +98,19 @@ public class SoundFile
 	
 	public void pause() 
 	{
+
 		this.paused = true;
 		this.clip.stop();
-		this.pauseMark = this.clip.getFramePosition();
+		
+		int framelength = this.clip.getFrameLength();
+		int framepos = this.clip.getFramePosition();
+		
+		double diff = framepos / framelength;
+		
+		if (diff < 1) this.pauseMark = framepos;
+		else this.pauseMark = (int) ((int) framepos - framelength * (int) diff);
+		
+		System.out.printf("\n%d\n%d\n%.2f\n%d\n", framelength, framepos, diff, pauseMark);
 	}
 	
 	public void toggleLoop() 
@@ -106,11 +119,14 @@ public class SoundFile
 		{
 			this.clip.loop(0);
 			this.looping = false;
+			this.clip.addLineListener(this.alr);
 		}
 		else
 		{
 			this.clip.loop(Clip.LOOP_CONTINUOUSLY);
 			this.looping = true;
+			this.clip.removeLineListener(this.alr);
+		//	this.clip.addLineListener(this.apll);
 		}
 	}
 	
@@ -163,10 +179,12 @@ public class SoundFile
 		catch (Exception e) { e.printStackTrace(); }
 	}
 	
+	public void markAsUnused() { this.unused = true; }
 	public void assignSchedule(ScheduledFuture<?> sf) { this.scheF = sf; }
 	public void shouldDebugFrames(boolean b) { this.DEBUG_FRAMES = b; }
 	
 	public long getPauseMark() { return this.pauseMark; }
+	public boolean isUnused() { return this.unused; }
 	public boolean isPaused() { return this.paused; }
 	public boolean isPlaying() { return this.playing; }
 	public boolean isLooping() { return this.looping; }

@@ -18,12 +18,15 @@ import java.util.Random;
 
 public class AudioController 
 {
+	private boolean DEBUG_PURGER = true;
+	
 	private Random rand;
 	private Panel pane;
 	private ScheduledExecutorService schedulerCore;
 	private Map<String, List<String>> audioKeyURLMap;
 	private Map<String, List<SoundFile>> sfxMap;
 	private List<SoundFile> activeQueue;
+	private Runnable purger;
 	
 	public AudioController(Map<String, List<String>> dirmap)
 	{
@@ -76,6 +79,50 @@ public class AudioController
 		}
 		
 		setScheduler(Executors.newScheduledThreadPool(3, new ThreadNamers()));
+		
+		//A runnable to remove unused or unnecessary sounds
+		purger = new Runnable()
+			{
+				public void run()
+				{
+					int in_use = activeQueue.size();
+					int un_use = 0;
+					boolean noSounds = true;
+					
+					if (activeQueue.size() != 0)
+					{
+						noSounds = false;
+						
+						Iterator<SoundFile> itor = activeQueue.iterator();
+						
+						while (itor.hasNext())
+						{
+							SoundFile sf = itor.next();
+							
+							if (sf.isUnused())
+							{
+								un_use++;
+								itor.remove();
+								sf = null;
+							}
+						}
+						
+						System.gc();
+					}
+					
+					if (DEBUG_PURGER)
+					{
+						if (noSounds) System.out.printf("\nThere is no active sound. If this message does not self report, there are some sounds still active.\n");
+						else
+						{
+							if (un_use > 1) System.out.printf("%d sounds have been deleted!\n", un_use);
+							else if (un_use > 0) System.out.printf("%d sound has been deleted!\n", in_use);
+						}
+					}
+				}
+			};
+			
+		this.schedulerCore.scheduleWithFixedDelay(purger, 15, 15, TimeUnit.SECONDS);
 	}
 	
 	public SoundFile play(String key, boolean loopAtStart)
@@ -99,17 +146,6 @@ public class AudioController
 	{
 		sf.getSchedule().cancel(true);
 		sf.stop();
-		this.activeQueue.remove(sf);
-		
-		sf = null;
-		System.gc();
-	}
-	
-	public void purgeSound(SoundFile sf)
-	{
-		this.activeQueue.remove(sf);
-		sf = null;
-		System.gc();
 	}
 	
 	public void toggleMute(SoundFile sf) { sf.toggleMute(); }
